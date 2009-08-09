@@ -51,6 +51,13 @@ class MidentifyFile(object):
         """
         Try to cast the string into some kind of an integer value, else return
         a unicode representation of the string
+
+        >>> MidentifyFile._guess_type("5")
+        5
+        >>> MidentifyFile._guess_type("5.5")
+        5.5
+        >>> MidentifyFile._guess_type("foo") == unicode('foo')
+        True
         """
         try:
             return int(val)
