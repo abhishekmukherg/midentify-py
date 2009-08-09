@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(  name='midentify',
-        version='0.1',
+        version='0.2',
         description="Identification of a file using MPlayer's midentify.sh script",
         author="Abhishek Mukherjee",
         author_email="abhishek.mukher.g@gmail.com",

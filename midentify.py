@@ -9,6 +9,7 @@ The function you want is midentify
 
 from subprocess import Popen, PIPE
 import re
+import ast
 
 MIDENTIFY_CMD = 'midentify'
 
@@ -17,6 +18,7 @@ PAIR_REGEX = re.compile(r"^(?P<key>[^=\n]+)=(?P<value>(\\\n|.)*)$",
 UNESCAPE_REGEX = re.compile(r"\\(.)", flags=re.DOTALL)
 
 class MidentifyFile(object):
+
     """
     Holds the metadata for a movie file created by midentify() call. Keys for
     the metadata can be accessed either through [] or simple . notation and
@@ -29,13 +31,15 @@ class MidentifyFile(object):
     >>> f.video_height
     1080
     """
+
     def __init__(self, information_string):
-        """
-        Create an object based on information_string, where information_string should be
-        similar to:
+        """ Create an object based on output from midentify
+
+        information_string should be similar to:
 
         ID_VIDEO_WIDTH=1920
         ID_VIDEO_HEIGHT=1080
+
         """
         self.keys = []
         for match in PAIR_REGEX.finditer(information_string):
@@ -46,11 +50,10 @@ class MidentifyFile(object):
             key = key.lower().lstrip('id_')
             self.__dict__[key] = value
             self.keys.append(key)
+
     @staticmethod
     def _guess_type(val):
-        """
-        Try to cast the string into some kind of an integer value, else return
-        a unicode representation of the string
+        """ Try to interpret a result from midentify
 
         >>> MidentifyFile._guess_type("5")
         5
@@ -58,27 +61,25 @@ class MidentifyFile(object):
         5.5
         >>> MidentifyFile._guess_type("foo") == unicode('foo')
         True
+
         """
         try:
-            return int(val)
-        except ValueError:
-            try:
-                return float(val)
-            except ValueError:
-                return unicode(val)
-        assert False
+            return ast.literal_eval(val)
+        except Exception:
+            return unicode(val)
+
     def __getitem__(self, key):
         if key not in self.keys:
             return None
         return self.__dict__[key]
+
     def __iter__(self):
         for key in self.keys:
             yield (key, self[key])
 
+
 def midentify(filename):
-    """
-    Returns a MidentifyFile object for the file at filename
-    """
+    """Returns a MidentifyFile object for the file at filename"""
     output = Popen([MIDENTIFY_CMD, filename], stdout=PIPE).communicate()[0]
     return MidentifyFile(output)
 
